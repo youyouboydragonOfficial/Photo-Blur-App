@@ -113,6 +113,7 @@
             const videoRef = useRef(null);
             const containerRef = useRef(null);
             const requestRef = useRef(null);
+            const imageRef = useRef(null);
             
             const isDragging = useRef(false);
             const lastPos = useRef({ x: 0, y: 0 });
@@ -132,11 +133,13 @@
                 setPan({ x: 0, y: 0 });
                 setIsPlaying(false);
                 setMode('move'); 
+                imageRef.current = null;
                 
                 if (f.type.startsWith('image/')) {
                 setFileType('image');
                 const img = new Image();
                 img.onload = () => {
+                    imageRef.current = img;
                     setOriginalSize({ w: img.width, h: img.height });
                     fitToScreen(img.width, img.height);
                 };
@@ -181,10 +184,8 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 ctx.filter = `brightness(${filters.brightness}%) contrast(${filters.contrast}%)`;
-                if (fileType === 'image') {
-                    const img = new Image();
-                    img.src = mediaSrc;
-                    if (img.complete) ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                if (fileType === 'image' && imageRef.current) {
+                    ctx.drawImage(imageRef.current, 0, 0, canvas.width, canvas.height);
                 } else if (fileType === 'video' && videoRef.current) {
                     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
                 }
@@ -233,7 +234,7 @@
                     ctx.drawImage(mosaicFullCanvas, 0, 0);
                     ctx.restore();
                 }
-            }, [originalSize, fileType, mediaSrc, filters, lines, videoRef]);
+            }, [originalSize, fileType, filters, lines, videoRef]);
 
             useEffect(() => {
                 if (fileType === 'video' && isPlaying) {
